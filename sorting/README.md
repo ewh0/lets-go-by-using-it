@@ -52,6 +52,8 @@ void CopyArray(B[], A[], n)
 
 
 
+In addition to this basic version, another version of merge sort is also implemented. In this version, both the sorting subroutines and merging subroutines are launched in parallel when appropriate. The concurrency model is based on goroutine and synchronization is achieved via channels. In addition, in this version, when the number of elements to be sorted drops below certain threshold (currently 8), the sorting will degrade to insertion sort to avoid unnecessary overhead of spawning new goroutines. See the implementation of `ParallelMergesort` for details
+
 
 
 
@@ -60,7 +62,31 @@ void CopyArray(B[], A[], n)
 
 ## APIs
 
-TODO: summarize exported APIs
+Generic version, serialized bottom-up merge sort, requires Go 1.21+
+
+```go
+func MergesortGx[T cmp.Ordered](c []T) 
+```
+
+
+
+Non-generic version via interface
+
+```go
+type Comparable interface {
+	Less(Comparable) bool
+}
+
+func Mergesort(c []Comparable)
+```
+
+
+
+Generic version, parallelized merge sort, requires Go 1.21+
+
+```go
+func ParallelMergesort[T cmp.Ordered](input []T)
+```
 
 
 
@@ -163,3 +189,21 @@ func MergesortGx[T cmp.Ordered](c []T)
 
 
 However, the convenience it offers is limited. Unless later Go decides to support operator overloading, right now we can only pass the builtin types 
+
+
+
+
+
+
+
+### 3. Wait, I've heard recursion is bad why you use it in the parallelized version?
+
+Yes, I've heard the same thing too. That's why I implement the serialized merge sort in the bottom-up iterative manner. However, for the parallelized version, I can't (or too lazy) to come up a solution in the bottom-up iterative manner. Recursion makes the design and implementation easier. 
+
+
+
+In addition, pay attention to the pivot selection technique applied in the merge subroutine. By selecting a median value among the values to be merged, we manage to keep the number of elements to be merged in each part balanced. This is kind of analogous to the difference between balanced binary search tree and regular binary search tree where the worst case scenario is avoided. No merge subroutine will have too many or too few elements to be merged. This way, we ensure that the depth of recursion is minimized to the scale of logN.
+
+
+
+In addition, the degrade to insertion sort when number of elements drop below certain threshold also help reduce down the height of the recursion tree. 

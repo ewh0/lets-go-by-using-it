@@ -89,3 +89,21 @@ func TestMergesortGx(t *testing.T) {
 		t.Errorf("failed to sort the randomly generated floating number slice")
 	}
 }
+
+func TestParallelMergesort(t *testing.T) {
+	var input = []int{5, 4, 1, 2, 4, 6, 3, 1, 8, 9}
+	ParallelMergesort(input)
+
+	if !slices.IsSorted(input) {
+		t.Errorf("failed to sort the randomly generated integer slice")
+	}
+
+	var input2 = make([]int, 0, 100000)
+	for i := 0; i < 100000; i++ {
+		input2 = append(input2, rand.Int())
+	}
+	ParallelMergesort(input2)
+	if !slices.IsSorted(input2) {
+		t.Errorf("failed to sort the randomly generated integer slice")
+	}
+}
